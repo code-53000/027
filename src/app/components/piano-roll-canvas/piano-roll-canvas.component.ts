@@ -3,7 +3,7 @@ import { Store } from '@ngrx/store';
 import { Subject, takeUntil } from 'rxjs';
 import { PianoRollRendererService, RenderConfig } from '@app/app/services/piano-roll/piano-roll-renderer.service';
 import { PianoRollInteractionService } from '@app/app/services/piano-roll/piano-roll-interaction.service';
-import { addNote, updateNote, removeNote, selectNote, deselectAllNotes } from '@app/app/store/project.actions';
+import { addNote, updateNote, removeNote, selectNote, deselectAllNotes, setZoomX, setScrollX, setScrollY } from '@app/app/store/project.actions';
 import { selectVisibleNotes, selectSelectedNoteIds, selectTool, selectSnapEnabled, selectSnapValue, selectZoomX, selectZoomY, selectScrollX, selectScrollY, selectPlayheadTick, selectActiveTrack, selectProject, selectActiveTrackId } from '@app/app/store/project.selectors';
 import { Note } from '@app/app/models/note.model';
 
@@ -11,6 +11,9 @@ import { Note } from '@app/app/models/note.model';
   selector: 'app-piano-roll-canvas',
   standalone: true,
   template: `<canvas #canvas class="block w-full h-full cursor-crosshair"></canvas>`,
+  host: {
+    class: 'block w-full h-full',
+  },
 })
 export class PianoRollCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -105,13 +108,17 @@ export class PianoRollCanvasComponent implements OnInit, AfterViewInit, OnDestro
   private onWheel(e: WheelEvent): void {
     e.preventDefault();
     if (e.shiftKey) {
-      this.scrollX += e.deltaY > 0 ? 480 : -480;
+      const delta = e.deltaY > 0 ? 480 : -480;
+      this.scrollX = Math.max(0, this.scrollX + delta);
+      this.store.dispatch(setScrollX({ scroll: this.scrollX }));
     } else if (e.ctrlKey) {
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
       this.zoomX = Math.max(0.5, Math.min(4, this.zoomX + delta));
-      this.store.dispatch({ type: '[Project] Set Zoom X', zoom: this.zoomX });
+      this.store.dispatch(setZoomX({ zoom: this.zoomX }));
     } else {
-      this.scrollY += e.deltaY > 0 ? 2 : -2;
+      const delta = e.deltaY > 0 ? 2 : -2;
+      this.scrollY = Math.max(0, Math.min(88, this.scrollY + delta));
+      this.store.dispatch(setScrollY({ scroll: this.scrollY }));
     }
   }
 
@@ -119,9 +126,9 @@ export class PianoRollCanvasComponent implements OnInit, AfterViewInit, OnDestro
     switch (result.action) {
       case 'add':
         if (result.note && this.activeTrackId) {
-          result.note.trackId = this.activeTrackId;
+          const newNote: Note = { ...result.note, trackId: this.activeTrackId };
+          this.store.dispatch(addNote({ note: newNote }));
         }
-        this.store.dispatch(addNote({ note: result.note }));
         break;
       case 'update':
         this.store.dispatch(updateNote({ note: result.updates }));
@@ -130,8 +137,11 @@ export class PianoRollCanvasComponent implements OnInit, AfterViewInit, OnDestro
         this.store.dispatch(removeNote({ noteId: result.noteId }));
         break;
       case 'select':
+        this.store.dispatch(deselectAllNotes());
         if (result.selectedIds && result.selectedIds.length > 0) {
-          this.store.dispatch(selectNote({ noteId: result.selectedIds[result.selectedIds.length - 1] }));
+          for (const id of result.selectedIds) {
+            this.store.dispatch(selectNote({ noteId: id }));
+          }
         }
         break;
       case 'deselect':

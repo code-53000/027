@@ -12,6 +12,7 @@ import { PianoRollCanvasComponent } from './components/piano-roll-canvas/piano-r
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, ToolbarComponent, TrackPanelComponent, TransportBarComponent, PianoRollCanvasComponent],
+  host: { class: 'block h-screen w-screen' },
   template: `
     <div class="flex flex-col h-screen w-screen overflow-hidden bg-bg">
       <app-toolbar></app-toolbar>

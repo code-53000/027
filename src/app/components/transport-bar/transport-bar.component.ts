@@ -10,6 +10,7 @@ import { PPQ } from '@app/app/models/constants';
   selector: 'app-transport-bar',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  host: { class: 'block' },
   template: `
     <div class="flex items-center gap-3 px-4 h-10 bg-panel border-t border-border">
       <button (click)="onPlay()"

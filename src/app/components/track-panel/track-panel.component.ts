@@ -9,6 +9,7 @@ import { selectTracks, selectActiveTrackId, selectProject } from '@app/app/store
   selector: 'app-track-panel',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  host: { class: 'block h-full' },
   template: `
     <div class="flex flex-col h-full bg-panel border-r border-border w-56 shrink-0">
       <div class="p-2 border-b border-border">

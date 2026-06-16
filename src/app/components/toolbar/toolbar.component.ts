@@ -8,6 +8,7 @@ import { selectTool, selectSnapEnabled, selectZoomX, selectZoomY } from '@app/ap
   selector: 'app-toolbar',
   standalone: true,
   imports: [CommonModule],
+  host: { class: 'block' },
   template: `
     <div class="flex items-center gap-2 px-3 h-10 bg-panel border-b border-border">
       <button (click)="onSetTool('select')"

@@ -19,9 +19,10 @@ export class PianoRollInteractionService {
   private dragMode: DragMode = 'none';
   private dragStartX = 0;
   private dragStartY = 0;
-  private dragNote: Note | null = null;
-  private dragOriginalNote: Note | null = null;
-  private creatingNote: Note | null = null;
+  private dragNoteId: string | null = null;
+  private dragOriginal: { startTick: number; pitch: number } | null = null;
+  private creatingId: string | null = null;
+  private creatingStartTick: number = 0;
   private eraseIds: string[] = [];
 
   handleMouseDown(
@@ -70,7 +71,8 @@ export class PianoRollInteractionService {
         velocity: DEFAULT_VELOCITY,
       };
       this.dragMode = 'create';
-      this.creatingNote = note;
+      this.creatingId = id;
+      this.creatingStartTick = tick;
       return { action: 'add', note };
     }
 
@@ -87,8 +89,8 @@ export class PianoRollInteractionService {
           newSelectedIds = [hitNote.id];
         }
         this.dragMode = 'move';
-        this.dragNote = hitNote;
-        this.dragOriginalNote = { ...hitNote };
+        this.dragNoteId = hitNote.id;
+        this.dragOriginal = { startTick: hitNote.startTick, pitch: hitNote.pitch };
         this.dragStartX = x;
         this.dragStartY = y;
         return { action: 'select', selectedIds: newSelectedIds };
@@ -122,29 +124,28 @@ export class PianoRollInteractionService {
     const tickW = renderer.tickWidth * config.zoomX;
     const pitchH = renderer.pitchHeight * config.zoomY;
 
-    if (this.dragMode === 'create' && this.creatingNote) {
+    if (this.dragMode === 'create' && this.creatingId) {
       const rawTick = renderer.screenToTick(x, config);
       const currentTick = snapEnabled ? renderer.snapTick(rawTick, snapValue) : rawTick;
-      const newDuration = Math.max(snapEnabled ? snapValue : 1, currentTick - this.creatingNote.startTick);
+      const newDuration = Math.max(snapEnabled ? snapValue : 1, currentTick - this.creatingStartTick);
       const updates: Partial<Note> & { id: string } = {
-        id: this.creatingNote.id,
+        id: this.creatingId,
         durationTicks: newDuration,
       };
-      this.creatingNote.durationTicks = newDuration;
       return { action: 'update', updates };
     }
 
-    if (this.dragMode === 'move' && this.dragNote && this.dragOriginalNote) {
+    if (this.dragMode === 'move' && this.dragNoteId && this.dragOriginal) {
       const tickDelta = Math.round(dx / tickW);
       const pitchDelta = -Math.round(dy / pitchH);
-      let newStartTick = this.dragOriginalNote.startTick + tickDelta;
-      let newPitch = this.dragOriginalNote.pitch + pitchDelta;
+      let newStartTick = this.dragOriginal.startTick + tickDelta;
+      let newPitch = this.dragOriginal.pitch + pitchDelta;
       if (snapEnabled) {
         newStartTick = renderer.snapTick(newStartTick, snapValue);
       }
       newPitch = renderer.clampPitch(newPitch);
       const updates: Partial<Note> & { id: string } = {
-        id: this.dragNote.id,
+        id: this.dragNoteId,
         startTick: Math.max(0, newStartTick),
         pitch: newPitch,
       };
@@ -165,9 +166,9 @@ export class PianoRollInteractionService {
 
   handleMouseUp(): void {
     this.dragMode = 'none';
-    this.dragNote = null;
-    this.dragOriginalNote = null;
-    this.creatingNote = null;
+    this.dragNoteId = null;
+    this.dragOriginal = null;
+    this.creatingId = null;
     this.eraseIds = [];
   }
 
