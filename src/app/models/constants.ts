@@ -1,0 +1,12 @@
+export const PPQ = 480;
+export const DEFAULT_BPM = 120;
+export const DEFAULT_BARS = 32;
+export const DEFAULT_TIME_SIG_NUM = 4;
+export const DEFAULT_TIME_SIG_DEN = 4;
+export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const MIN_PITCH = 0;
+export const MAX_PITCH = 127;
+export const MIN_VELOCITY = 1;
+export const MAX_VELOCITY = 127;
+export const DEFAULT_VELOCITY = 100;
+export const TRACK_COLORS = ['#00e5c8', '#ff8c42', '#ff5ca0', '#a855f7', '#3b82f6', '#facc15', '#f43f5e', '#22d3ee'];
